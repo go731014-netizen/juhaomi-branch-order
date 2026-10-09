@@ -230,3 +230,45 @@ with tab3:
         st.info("目前還沒有叫貨紀錄。")
 
 st.caption("揪好覓庫存叫貨系統｜測試版本")
+
+# ===== 商品管理 =====
+st.divider()
+st.header("🛠️ 商品管理")
+st.subheader("➕ 新增商品")
+
+with st.form("add_product_form", clear_on_submit=True):
+    product_code = st.text_input("商品編號（必填）")
+    product_name = st.text_input("商品名稱（必填）")
+    barcode = st.text_input("商品條碼（沒有可留空）")
+    unit = st.selectbox(
+        "計量單位",
+        ["個", "包", "盒", "袋", "瓶", "罐", "斤", "公斤", "箱"]
+    )
+    min_stock = st.number_input(
+        "最低庫存提醒數量",
+        min_value=0,
+        value=0,
+        step=1
+    )
+
+    submitted = st.form_submit_button("💾 新增商品")
+
+    if submitted:
+        if not product_code.strip() or not product_name.strip():
+            st.warning("請填寫商品編號和商品名稱。")
+        else:
+            try:
+                new_product = {
+                    "product_code": product_code.strip(),
+                    "product_name": product_name.strip(),
+                    "barcode": barcode.strip() or None,
+                    "unit": unit,
+                    "min_stock": int(min_stock),
+                    "is_active": True
+                }
+                add_data("products", new_product)
+                st.success("商品新增成功！")
+                st.rerun()
+            except Exception as e:
+                st.error("新增失敗，請確認商品編號是否重複。")
+                st.code(str(e))
