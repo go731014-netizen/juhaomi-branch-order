@@ -204,6 +204,26 @@ with tab3:
             how="left"
         )
 
+# 取得美術館店（總倉）的庫存
+warehouse_id = 3
+
+warehouse_qty = stock_df[stock_df["store_id"] == warehouse_id][
+    ["product_id", "quantity"]
+].rename(columns={
+    "quantity": "總倉庫存"
+})
+
+# 將總倉庫存合併到叫貨紀錄
+order_df = order_df.merge(
+    warehouse_qty,
+    on="product_id",
+    how="left"
+)
+
+order_df["總倉庫存"] = order_df["總倉庫存"].fillna(0)
+order_df["current_quantity"] = order_df["總倉庫存"]
+order_df = order_df.drop(columns=["總倉庫存"])
+
         cols = [
             c for c in [
                 "id", "store_name", "product_name",
