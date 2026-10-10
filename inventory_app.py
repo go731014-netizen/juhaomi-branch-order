@@ -306,3 +306,62 @@ try:
 except Exception as e:
     st.error("讀取商品清單失敗，請確認資料庫設定。")
     st.code(str(e))
+# ===== 商品啟用狀態管理 =====
+st.divider()
+st.subheader("🔧 商品啟用／停用管理")
+
+try:
+    all_products = get_data(
+        "products",
+        {
+            "select": "id,product_code,product_name,is_active",
+            "order": "id.desc"
+        }
+    )
+
+    if all_products:
+        product_options = {
+            f'{p["product_code"]}｜{p["product_name"]}｜'
+            f'{"啟用中" if p["is_active"] else "已停用"}': p
+            for p in all_products
+        }
+
+        selected_label = st.selectbox(
+            "選擇要管理的商品",
+            list(product_options.keys())
+        )
+        selected_item = product_options[selected_label]
+
+        st.write(
+            "目前狀態：",
+            "啟用中" if selected_item["is_active"] else "已停用"
+        )
+
+        if selected_item["is_active"]:
+            if st.button("⏸️ 停用此商品", use_container_width=True):
+                response = requests.patch(
+                    f'{SUPABASE_URL}/rest/v1/products?id=eq.{selected_item["id"]}',
+                    headers={**HEADERS, "Prefer": "return=minimal"},
+                    json={"is_active": False},
+                    timeout=20
+                )
+                response.raise_for_status()
+                st.success("商品已停用！")
+                st.rerun()
+        else:
+            if st.button("▶️ 重新啟用此商品", use_container_width=True):
+                response = requests.patch(
+                    f'{SUPABASE_URL}/rest/v1/products?id=eq.{selected_item["id"]}',
+                    headers={**HEADERS, "Prefer": "return=minimal"},
+                    json={"is_active": True},
+                    timeout=20
+                )
+                response.raise_for_status()
+                st.success("商品已重新啟用！")
+                st.rerun()
+    else:
+        st.info("目前沒有商品資料。")
+
+except Exception as e:
+    st.error("商品狀態更新失敗，請確認資料庫連線。")
+    st.code(str(e))
