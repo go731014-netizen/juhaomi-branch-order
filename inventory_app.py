@@ -365,3 +365,83 @@ try:
 except Exception as e:
     st.error("商品狀態更新失敗，請確認資料庫連線。")
     st.code(str(e))
+# ===== 商品資料修改 =====
+st.divider()
+st.subheader("✏️ 修改商品資料")
+
+try:
+    edit_products = get_data(
+        "products",
+        {
+            "select": "id,product_code,product_name,barcode,unit,min_stock,is_active",
+            "order": "id.desc"
+        }
+    )
+
+    if edit_products:
+        edit_options = {
+            f'{p["product_code"]} | {p["product_name"]}': p
+            for p in edit_products
+        }
+
+        edit_label = st.selectbox(
+            "選擇要修改的商品",
+            list(edit_options.keys()),
+            key="edit_product_select"
+        )
+        edit_product = edit_options[edit_label]
+
+        with st.form("edit_product_form"):
+            edit_name = st.text_input(
+                "商品名稱",
+                value=edit_product["product_name"] or ""
+            )
+            edit_barcode = st.text_input(
+                "商品條碼",
+                value=edit_product["barcode"] or ""
+            )
+            edit_unit = st.selectbox(
+                "計量單位",
+                ["個", "包", "盒", "袋", "瓶", "罐", "斤", "公斤", "箱"],
+                index=(
+                    ["個", "包", "盒", "袋", "瓶", "罐", "斤", "公斤", "箱"].index(
+                        edit_product["unit"]
+                    )
+                    if edit_product["unit"] in
+                    ["個", "包", "盒", "袋", "瓶", "罐", "斤", "公斤", "箱"]
+                    else 0
+                )
+            )
+            edit_min_stock = st.number_input(
+                "最低庫存提醒數量",
+                min_value=0,
+                value=int(edit_product["min_stock"] or 0),
+                step=1
+            )
+
+            save_edit = st.form_submit_button("💾 儲存修改")
+
+            if save_edit:
+                if not edit_name.strip():
+                    st.warning("商品名稱不可空白。")
+                else:
+                    response = requests.patch(
+                        f'{SUPABASE_URL}/rest/v1/products?id=eq.{edit_product["id"]}',
+                        headers={**HEADERS, "Prefer": "return=minimal"},
+                        json={
+                            "product_name": edit_name.strip(),
+                            "barcode": edit_barcode.strip() or None,
+                            "unit": edit_unit,
+                            "min_stock": int(edit_min_stock)
+                        },
+                        timeout=20
+                    )
+                    response.raise_for_status()
+                    st.success("商品資料修改成功！")
+                    st.rerun()
+    else:
+        st.info("目前沒有商品資料。")
+
+except Exception as e:
+    st.error("修改商品資料失敗，請確認資料庫連線。")
+    st.code(str(e))
