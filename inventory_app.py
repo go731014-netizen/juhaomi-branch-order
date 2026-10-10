@@ -157,29 +157,31 @@ with tab1:
                 st.code(str(e))
 
 with tab2:
-    st.subheader("📊 各門市庫存")
+    st.subheader("🏬 美術館店（總倉）庫存")
 
     if stock_df.empty:
         st.info("目前尚無庫存資料。")
-    elif not product_df.empty:
-        stock_view = stock_df.merge(
-            store_df[["id", "store_name"]],
-            left_on="store_id",
-            right_on="id",
-            how="left"
-        ).merge(
+    elif product_df.empty:
+        st.info("目前尚無商品資料。")
+    else:
+        warehouse_id = 3
+
+        warehouse_stock = stock_df[
+            stock_df["store_id"] == warehouse_id
+        ].merge(
             product_df[["id", "product_name", "unit"]],
             left_on="product_id",
             right_on="id",
             how="left"
         )
 
-        stock_view = stock_view[
-            ["store_name", "product_name", "quantity", "unit"]
+        warehouse_stock = warehouse_stock[
+            ["product_name", "quantity", "unit"]
         ]
-        stock_view.columns = ["門市", "商品", "庫存數量", "單位"]
+        warehouse_stock.columns = ["商品", "總倉庫存數量", "單位"]
+
         st.dataframe(
-            stock_view,
+            warehouse_stock,
             use_container_width=True,
             hide_index=True
         )
