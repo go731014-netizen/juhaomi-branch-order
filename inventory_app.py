@@ -272,3 +272,37 @@ with st.form("add_product_form", clear_on_submit=True):
             except Exception as e:
                 st.error("新增失敗，請確認商品編號是否重複。")
                 st.code(str(e))
+st.divider()
+st.subheader("📋 商品清單")
+
+try:
+    product_list = get_data(
+        "products",
+        {
+            "select": "id,product_code,product_name,barcode,unit,min_stock,is_active",
+            "order": "id.desc"
+        }
+    )
+
+    if product_list:
+        product_df = pd.DataFrame(product_list)
+        product_df = product_df.rename(columns={
+            "id": "編號",
+            "product_code": "商品編號",
+            "product_name": "商品名稱",
+            "barcode": "商品條碼",
+            "unit": "單位",
+            "min_stock": "最低庫存提醒",
+            "is_active": "啟用中"
+        })
+        st.dataframe(
+            product_df,
+            use_container_width=True,
+            hide_index=True
+        )
+    else:
+        st.info("目前還沒有商品資料。")
+
+except Exception as e:
+    st.error("讀取商品清單失敗，請確認資料庫設定。")
+    st.code(str(e))
