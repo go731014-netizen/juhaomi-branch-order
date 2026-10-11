@@ -188,71 +188,66 @@ with tab2:
 
 with tab3:
     st.subheader("🧾 最近叫貨紀錄")
+if orders:
+    order_df = pd.DataFrame(orders)
+    order_df = order_df.merge(
+        store_df[["id", "store_name"]],
+        left_on="store_id",
+        right_on="id",
+        how="left"
+    )
+    order_df = order_df.merge(
+        product_df[["id", "product_name"]],
+        left_on="product_id",
+        right_on="id",
+        how="left"
+    )
 
-    if orders:
-        order_df = pd.DataFrame(orders)
-        order_df = order_df.merge(
-            store_df[["id", "store_name"]],
-            left_on="store_id",
-            right_on="id",
-            how="left"
-        )
-        order_df = order_df.merge(
-            product_df[["id", "product_name"]],
-            left_on="product_id",
-            right_on="id",
-            how="left"
-        )
+    # 取得美術館店（總倉）的庫存
+    warehouse_id = 3
+    warehouse_qty = stock_df[
+        stock_df["store_id"] == warehouse_id
+    ][["product_id", "quantity"]].rename(
+        columns={"quantity": "總倉庫存"}
+    )
 
-            # 取得美術館店（總倉）的庫存
-            warehouse_id = 3
-            warehouse_qty = stock_df[
-                stock_df["store_id"] == warehouse_id
-            ][["product_id", "quantity"]].rename(
-                columns={"quantity": "總倉庫存"}
-            )
+    order_df = order_df.merge(
+        warehouse_qty,
+        on="product_id",
+        how="left"
+    )
+    order_df["current_quantity"] = (
+        order_df["總倉庫存"].fillna(0)
+    )
+    order_df = order_df.drop(columns=["總倉庫存"])
 
-            order_df = order_df.merge(
-                warehouse_qty,
-                on="product_id",
-                how="left"
-            )
-
-            order_df["current_quantity"] = (
-                order_df["總倉庫存"].fillna(0)
-            )
-            order_df = order_df.drop(columns=["總倉庫存"])
-
-
-
-
-
-cols = [
-            c for c in [
-                "id", "store_name", "product_name",
-                "current_quantity", "requested_quantity",
-                "status", "note", "created_at"
-            ]
-            if c in order_df.columns
+    cols = [
+        c for c in [
+            "id", "store_name", "product_name",
+            "current_quantity", "requested_quantity",
+            "status", "note", "created_at"
         ]
-        order_df = order_df[cols]
-        order_df = order_df.rename(columns={
-            "id": "單號",
-            "store_name": "門市",
-            "product_name": "商品",
-            "current_quantity": "目前庫存",
-            "requested_quantity": "申請數量",
-            "status": "狀態",
-            "note": "備註",
-            "created_at": "申請時間"
-        })
-        st.dataframe(
-            order_df,
-            use_container_width=True,
-            hide_index=True
-        )
-    else:
-        st.info("目前還沒有叫貨紀錄。")
+        if c in order_df.columns
+    ]
+    order_df = order_df[cols]
+    order_df = order_df.rename(columns={
+        "id": "單號",
+        "store_name": "門市",
+        "product_name": "商品",
+        "current_quantity": "目前庫存",
+        "requested_quantity": "申請數量",
+        "status": "狀態",
+        "note": "備註",
+        "created_at": "申請時間"
+    })
+    st.dataframe(
+        order_df,
+        use_container_width=True,
+        hide_index=True
+    )
+else:
+    st.info("目前還沒有叫貨紀錄。")
+
 
 st.caption("揪好覓庫存叫貨系統｜測試版本")
 
