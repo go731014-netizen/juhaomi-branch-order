@@ -226,16 +226,7 @@ with tab3:
 
 })
 
-# 將總倉庫存合併到叫貨紀錄
-order_df = order_df.merge(
-    warehouse_qty,
-    on="product_id",
-    how="left"
-)
 
-order_df["總倉庫存"] = order_df["總倉庫存"].fillna(0)
-order_df["current_quantity"] = order_df["總倉庫存"]
-order_df = order_df.drop(columns=["總倉庫存"])
 
         cols = [
             c for c in [
