@@ -224,11 +224,10 @@ with tab3:
             order_df = order_df.drop(columns=["總倉庫存"])
 
 
-})
 
 
 
-        cols = [
+cols = [
             c for c in [
                 "id", "store_name", "product_name",
                 "current_quantity", "requested_quantity",
