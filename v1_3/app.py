@@ -65,7 +65,7 @@ with tab_order:
             if not cart:
                 st.warning("請至少輸入一項商品數量。")
             else:
-                try:
+        try:
             for item in cart:
                 st.write("測試資料：", item)
                 st.write("門市 ID：", store_id)
@@ -77,11 +77,12 @@ with tab_order:
                     "note": note.strip() or None,
                     "status": "pending"
                 })
-                    st.success(f"{branch} 已送出 {len(cart)} 項叫貨申請！")
-                    st.rerun()
-                except Exception as e:
-                    st.error("送出失敗，請確認 restock_requests 欄位及新增權限。")
-                    st.code(str(e))
+            st.success(f"{branch} 已送出 {len(cart)} 項叫貨申請！")
+            st.rerun()
+        except Exception as e:
+            st.error("送出失敗，請確認 restock_requests 欄位及新增權限。")
+            st.code(str(e))
+   
 
 with tab_add:
     st.write("新增後立即開放五間門市搜尋及叫貨。新增前請先搜尋，避免重複商品。")
