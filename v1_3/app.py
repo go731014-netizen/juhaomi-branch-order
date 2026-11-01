@@ -61,27 +61,30 @@ with tab_order:
                     cart.append({"product_id": p["id"], "quantity": int(qty)})
             note = st.text_input("整張叫貨單備註（選填）")
             submitted = st.form_submit_button("送出叫貨單", type="primary", use_container_width=True)
-        if submitted:
-            if not cart:
-                st.warning("請至少輸入一項商品數量。")
-            else:
-        try:
-            for item in cart:
-                st.write("測試資料：", item)
-                st.write("門市 ID：", store_id)
-                insert_row(url, key, "restock_requests", {
-                    "store_id": store_id,
-                    "product_id": item["product_id"],
-                    "current_quantity": 0,
-                    "requested_quantity": item["quantity"],
-                    "note": note.strip() or None,
-                    "status": "pending"
-                })
-            st.success(f"{branch} 已送出 {len(cart)} 項叫貨申請！")
-            st.rerun()
-        except Exception as e:
-            st.error("送出失敗，請確認 restock_requests 欄位及新增權限。")
-            st.code(str(e))
+               if submitted:
+                if not cart:
+                    st.warning("請至少輸入一項商品數量。")
+                else:
+                    try:
+                        for item in cart:
+                            st.write("測試資料：", item)
+                            st.write("門市 ID：", store_id)
+
+                            insert_row(url, key, "restock_requests", {
+                                "store_id": store_id,
+                                "product_id": item["product_id"],
+                                "current_quantity": 0,
+                                "requested_quantity": item["quantity"],
+                                "note": note.strip() or None,
+                                "status": "pending"
+                            })
+
+                        st.success(f"{branch} 已送出 {len(cart)} 項叫貨申請！")
+                        st.rerun()
+
+                    except Exception as e:
+                        st.error("送出失敗，請確認 restock_requests 欄位及新增權限。")
+                        st.code(str(e))
    
 
 with tab_add:
