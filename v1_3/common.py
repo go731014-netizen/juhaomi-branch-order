@@ -31,8 +31,18 @@ def get_rows(url, key, table, params=None):
 
 
 def insert_row(url, key, table, data):
-    r = requests.post(f"{url}/rest/v1/{table}", headers=headers(key), json=data, timeout=30)
-    r.raise_for_status()
+    r = requests.post(
+        f"{url}/rest/v1/{table}",
+        headers=headers(key),
+        json=data,
+        timeout=30
+    )
+
+    if not r.ok:
+        raise RuntimeError(
+            f"Supabase HTTP {r.status_code}: {r.text}"
+        )
+
     return r.json()
 
 
