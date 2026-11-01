@@ -66,15 +66,17 @@ with tab_order:
                 st.warning("請至少輸入一項商品數量。")
             else:
                 try:
-                    for item in cart:
-                        insert_row(url, key, "restock_requests", {
-                            "store_id": store_id,
-                            "product_id": item["product_id"],
-                            "current_quantity": 0,
-                            "requested_quantity": item["quantity"],
-                            "note": note.strip() or None,
-                            "status": "pending"
-                        })
+            for item in cart:
+                st.write("測試資料：", item)
+                st.write("門市 ID：", store_id)
+                insert_row(url, key, "restock_requests", {
+                    "store_id": store_id,
+                    "product_id": item["product_id"],
+                    "current_quantity": 0,
+                    "requested_quantity": item["quantity"],
+                    "note": note.strip() or None,
+                    "status": "pending"
+                })
                     st.success(f"{branch} 已送出 {len(cart)} 項叫貨申請！")
                     st.rerun()
                 except Exception as e:
