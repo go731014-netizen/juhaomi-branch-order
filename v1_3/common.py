@@ -32,7 +32,7 @@ def get_rows(url, key, table, params=None):
 def insert_row(url, key, table, data):
     r = requests.post(
         f"{url}/rest/v1/{table}",
-        headers=headers(key),
+        headers=headers(key, "return=minimal"),
         json=data,
         timeout=30
     )
@@ -42,7 +42,7 @@ def insert_row(url, key, table, data):
             f"Supabase HTTP {r.status_code}: {r.text}"
         )
 
-    return r.json()
+    return None
 
 
 def patch_row(url, key, table, filters, data):
