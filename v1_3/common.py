@@ -18,7 +18,6 @@ def config(admin=False):
 def headers(key, prefer="return=representation"):
     return {
         "apikey": key,
-        "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
         "Prefer": prefer,
     }
