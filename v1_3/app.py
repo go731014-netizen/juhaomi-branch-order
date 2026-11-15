@@ -549,9 +549,7 @@ with tab_admin:
                     st.info("目前還沒有出貨紀錄。")
 
             # ------------------------------
-            # 商品管理
-            # ------------------------------
-
+ 
             with admin_tab_products:
                 st.subheader("商品清單")
 
@@ -579,62 +577,71 @@ with tab_admin:
 
                     selected_label = st.selectbox(
                         "選擇商品修改",
-                        list(opts.keys())
+                        list(opts.keys()),
+                        key="admin_product_select"
                     )
+
                     item = opts[selected_label]
 
-with st.form("edit_product_form"):
-    name = st.text_input(
-        "商品名稱",
-        value=item.get("product_name") or "",
-        key=f"edit_name_{item['id']}"
-    )
+                    with st.form(
+                        "edit_product_form",
+                        clear_on_submit=False
+                    ):
+                        name = st.text_input(
+                            "商品名稱",
+                            value=item.get("product_name") or "",
+                            key=f"edit_name_{item['id']}"
+                        )
 
-    barcode = st.text_input(
-        "商品條碼",
-        value=item.get("barcode") or "",
-        key=f"edit_barcode_{item['id']}"
-    )
+                        barcode = st.text_input(
+                            "商品條碼",
+                            value=item.get("barcode") or "",
+                            key=f"edit_barcode_{item['id']}"
+                        )
 
-    unit = st.selectbox(
-        "計量單位",
-        UNITS,
-        index=(
-            UNITS.index(item.get("unit"))
-            if item.get("unit") in UNITS else 0
-        ),
-        key=f"edit_unit_{item['id']}"
-    )
+                        unit = st.selectbox(
+                            "計量單位",
+                            UNITS,
+                            index=(
+                                UNITS.index(item.get("unit"))
+                                if item.get("unit") in UNITS else 0
+                            ),
+                            key=f"edit_unit_{item['id']}"
+                        )
 
-    temperature = st.selectbox(
-        "商品溫層",
-        TEMPERATURES,
-        index=(
-            TEMPERATURES.index(item.get("temperature"))
-            if item.get("temperature") in TEMPERATURES else 2
-        ),
-        key=f"edit_temperature_{item['id']}"
-    )
+                        temperature = st.selectbox(
+                            "商品溫層",
+                            TEMPERATURES,
+                            index=(
+                                TEMPERATURES.index(item.get("temperature"))
+                                if item.get("temperature") in TEMPERATURES else 2
+                            ),
+                            key=f"edit_temperature_{item['id']}"
+                        )
 
-    min_stock = st.number_input(
-        "最低庫存欄位",
-        min_value=0,
-        value=int(item.get("min_stock") or 0),
-        key=f"edit_min_stock_{item['id']}"
-    )
+                        min_stock = st.number_input(
+                            "最低庫存欄位",
+                            min_value=0,
+                            value=int(item.get("min_stock") or 0),
+                            key=f"edit_min_stock_{item['id']}"
+                        )
 
-    active = st.checkbox(
-        "啟用商品（啟用後門市可叫貨）",
-        value=bool(item.get("is_active")),
-        key=f"edit_active_{item['id']}"
-    )
+                        active = st.checkbox(
+                            "啟用商品（啟用後門市可叫貨）",
+                            value=bool(item.get("is_active")),
+                            key=f"edit_active_{item['id']}"
+                        )
 
-    save = st.form_submit_button("儲存商品修改")
+                        save = st.form_submit_button(
+                            "儲存商品修改"
+                        )
 
                     if save:
                         try:
                             patch_row(
-                                admin_url, admin_key, "products",
+                                admin_url,
+                                admin_key,
+                                "products",
                                 {"id": f"eq.{item['id']}"},
                                 {
                                     "product_name": name.strip(),
@@ -645,10 +652,14 @@ with st.form("edit_product_form"):
                                     "is_active": active
                                 }
                             )
+
                             st.success("商品資料已更新。")
                             st.rerun()
+
                         except Exception as e:
                             st.error("商品修改失敗。")
                             st.code(str(e))
+
                 else:
                     st.info("目前沒有商品。")
+          
