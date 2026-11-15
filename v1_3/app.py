@@ -115,7 +115,7 @@ with tab_branch:
                                 "product_id": p["id"],
                                 "quantity": int(qty)
                             })
-
+                    caller_name = st.text_input("叫貨人姓名（必填）")
                     note = st.text_input("整張叫貨單備註（選填）")
 
                     submitted = st.form_submit_button(
@@ -124,19 +124,22 @@ with tab_branch:
                         use_container_width=True
                     )
 
-                if submitted:
-                    if not cart:
-                        st.warning("請至少輸入一項商品數量。")
-                    else:
-                        try:
-                            for item in cart:
-                                insert_row(
+                    if submitted:
+                        if not caller_name.strip():
+                            st.warning("請填寫叫貨人姓名。")
+                        elif not cart:
+                            st.warning("請至少輸入一項商品數量。")
+                        else:
+                            try:
+                                for item in cart:
+                                    insert_row(
                                     url, key, "restock_requests",
                                     {
                                         "store_id": store_id,
                                         "product_id": item["product_id"],
                                         "current_quantity": 0,
                                         "requested_quantity": item["quantity"],
+                                        "caller_name": caller_name.strip(),
                                         "note": note.strip() or None,
                                         "status": "pending"
                                     }
@@ -253,6 +256,7 @@ with tab_branch:
 
                         display.append({
                             "叫貨單號": r.get("id"),
+                            "叫貨人": r.get("caller_name") or "—",
                             "商品": p.get("product_name", "未知商品"),
                             "溫層": temperature_of(p),
                             "叫貨數量": requested,
@@ -402,6 +406,7 @@ with tab_admin:
                     rows.append({
                         "叫貨單號": o.get("id"),
                         "門市": store_map.get(o.get("store_id"), "未知門市"),
+                        "叫貨人": o.get("caller_name") or "—",
                         "商品": product_map.get(
                             o.get("product_id"),
                             f"商品 #{o.get('product_id')}"
@@ -528,12 +533,12 @@ with tab_admin:
                         rows.append({
                             "出貨紀錄編號": s.get("id"),
                             "叫貨單號": s.get("restock_request_id"),
-                            "門市": store_map.get(
-                                o.get("store_id"), "未知門市"
+                           
+                           "門市": store_map.get(
+                              o.get("store_id"), "未知門市"
                             ),
+                            "叫貨人": o.get("caller_name") or "—",
                             "商品": product_map.get(
-                                o.get("product_id"), "未知商品"
-                            ),
                             "本次出貨數量": s.get("quantity"),
                             "出貨時間": s.get("shipped_at"),
                             "出貨人員": s.get("shipped_by"),
