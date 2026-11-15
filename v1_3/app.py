@@ -139,7 +139,7 @@ with tab_order:
                     st.success(
                         f"{branch} 已送出 {len(cart)} 項叫貨申請！"
                     )
-                    st.rerun()
+                   
 
                 except Exception as e:
                     st.error("送出失敗，請確認資料表欄位及新增權限。")
