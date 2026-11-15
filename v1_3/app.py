@@ -220,7 +220,7 @@ with tab_branch:
                 records = get_rows(
                     url, key, "restock_requests",
                     {
-                        "select": "id,product_id,requested_quantity,status,note,created_at",
+                        "select": "id,product_id,requested_quantity,status,note,created_at,caller_name",
                         "store_id": f"eq.{store_id}",
                         "order": "id.desc",
                         "limit": "200"
