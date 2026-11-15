@@ -124,15 +124,15 @@ with tab_branch:
                         use_container_width=True
                     )
 
-                    if submitted:
-                        if not caller_name.strip():
-                            st.warning("請填寫叫貨人姓名。")
-                        elif not cart:
-                            st.warning("請至少輸入一項商品數量。")
-                        else:
-                            try:
-                                for item in cart:
-                                    insert_row(
+                if submitted:
+                    if not caller_name.strip():
+                        st.warning("請填寫叫貨人姓名。")
+                    elif not cart:
+                        st.warning("請至少輸入一項商品數量。")
+                    else:
+                        try:
+                            for item in cart:
+                                insert_row(
                                     url, key, "restock_requests",
                                     {
                                         "store_id": store_id,
@@ -148,6 +148,7 @@ with tab_branch:
                             st.success(
                                 f"{branch} 已送出 {len(cart)} 項叫貨申請！"
                             )
+
                         except Exception as e:
                             st.error("送出失敗，請確認資料表欄位及新增權限。")
                             st.code(str(e))
