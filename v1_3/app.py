@@ -539,6 +539,8 @@ with tab_admin:
                             ),
                             "叫貨人": o.get("caller_name") or "—",
                             "商品": product_map.get(
+                                o.get("product_id"), "未知商品"
+),    
                             "本次出貨數量": s.get("quantity"),
                             "出貨時間": s.get("shipped_at"),
                             "出貨人員": s.get("shipped_by"),
