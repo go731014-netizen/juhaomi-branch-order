@@ -583,42 +583,53 @@ with tab_admin:
                     )
                     item = opts[selected_label]
 
-                    with st.form("edit_product_form"):
-                        name = st.text_input(
-                            "商品名稱",
-                            value=item.get("product_name") or ""
-                        )
-                        barcode = st.text_input(
-                            "商品條碼",
-                            value=item.get("barcode") or ""
-                        )
-                        unit = st.selectbox(
-                            "計量單位",
-                            UNITS,
-                            index=(
-                                UNITS.index(item.get("unit"))
-                                if item.get("unit") in UNITS else 0
-                            )
-                        )
-                        temperature = st.selectbox(
-                            "商品溫層",
-                            TEMPERATURES,
-                            index=(
-                                TEMPERATURES.index(item.get("temperature"))
-                                if item.get("temperature") in TEMPERATURES else 2
-                            )
-                        )
-                        min_stock = st.number_input(
-                            "最低庫存欄位",
-                            min_value=0,
-                            value=int(item.get("min_stock") or 0)
-                        )
-                        active = st.checkbox(
-                            "啟用商品（啟用後門市可叫貨）",
-                            value=bool(item.get("is_active"))
-                        )
+with st.form("edit_product_form"):
+    name = st.text_input(
+        "商品名稱",
+        value=item.get("product_name") or "",
+        key=f"edit_name_{item['id']}"
+    )
 
-                        save = st.form_submit_button("儲存商品修改")
+    barcode = st.text_input(
+        "商品條碼",
+        value=item.get("barcode") or "",
+        key=f"edit_barcode_{item['id']}"
+    )
+
+    unit = st.selectbox(
+        "計量單位",
+        UNITS,
+        index=(
+            UNITS.index(item.get("unit"))
+            if item.get("unit") in UNITS else 0
+        ),
+        key=f"edit_unit_{item['id']}"
+    )
+
+    temperature = st.selectbox(
+        "商品溫層",
+        TEMPERATURES,
+        index=(
+            TEMPERATURES.index(item.get("temperature"))
+            if item.get("temperature") in TEMPERATURES else 2
+        ),
+        key=f"edit_temperature_{item['id']}"
+    )
+
+    min_stock = st.number_input(
+        "最低庫存欄位",
+        min_value=0,
+        value=int(item.get("min_stock") or 0),
+        key=f"edit_min_stock_{item['id']}"
+    )
+
+    active = st.checkbox(
+        "啟用商品（啟用後門市可叫貨）",
+        value=bool(item.get("is_active")),
+        key=f"edit_active_{item['id']}"
+    )
+
+    save = st.form_submit_button("儲存商品修改")
 
                     if save:
                         try:
