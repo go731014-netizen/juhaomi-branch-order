@@ -1,8 +1,15 @@
 import requests
 import streamlit as st
 
-UNITS = ["個", "包", "盒", "袋", "瓶", "罐", "斤", "公斤", "箱", "組", "支", "件"]
+UNITS = ["包", "盒", "袋", "罐", "箱", "組", "支"]
+
 TEMPERATURES = ["冷凍", "冷藏", "常溫"]
+
+PRODUCT_CATEGORIES = {
+    "冷凍": ["肉類", "海鮮", "炸物", "湯類", "其他"],
+    "冷藏": [],
+    "常溫": ["零食", "調味", "酒類", "乾糧", "其他"]
+}
 
 
 def config(admin=False):
