@@ -384,12 +384,13 @@ with tab_admin:
             }
             totals = shipped_totals(shipments)
 
-            admin_tab_orders, admin_tab_ship, admin_tab_history, admin_tab_products = st.tabs(
+                        admin_tab_orders, admin_tab_ship, admin_tab_history, admin_tab_products, admin_tab_print = st.tabs(
                 [
                     "📋 全部叫貨紀錄",
                     "🚚 登記出貨",
-                    "🧾 出貨歷史",
-                    "🛠️ 商品管理"
+                    "📄 出貨歷史",
+                    "🛠 商品管理",
+                    "📦 每日出貨列印"
                 ]
             )
 
