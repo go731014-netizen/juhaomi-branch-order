@@ -66,7 +66,7 @@ with tab_branch:
         with tab_order:
             temp_filter = st.radio(
                 "商品溫層",
-                ["全部", *TEMPERATURES],
+                TEMPERATURES,
                 horizontal=True,
                 key="branch_temp_filter"
             )
@@ -302,26 +302,7 @@ with tab_branch:
                         hide_index=True
                     )
 
-                    st.subheader("每次出貨明細")
-
-                    if shipments:
-                        st.dataframe(
-                            pd.DataFrame([
-                                {
-                                    "出貨紀錄編號": s.get("id"),
-                                    "叫貨單號": s.get("restock_request_id"),
-                                    "本次出貨數量": s.get("quantity"),
-                                    "出貨時間": s.get("shipped_at"),
-                                    "出貨人員": s.get("shipped_by"),
-                                    "出貨備註": s.get("note")
-                                }
-                                for s in shipments
-                            ]),
-                            use_container_width=True,
-                            hide_index=True
-                        )
-                    else:
-                        st.info("目前還沒有出貨紀錄。")
+                    
                 else:
                     st.info("這間門市目前沒有叫貨紀錄。")
 
