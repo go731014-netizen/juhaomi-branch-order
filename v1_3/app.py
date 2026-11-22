@@ -173,17 +173,34 @@ with tab_branch:
                 "新增前請先搜尋，避免重複商品。"
             )
 
-            with st.form("add_product_form", clear_on_submit=True):
-                code = st.text_input("商品編號（必填）")
-                name = st.text_input("商品名稱（必填）")
-                barcode = st.text_input("商品條碼（選填）")
-                unit = st.selectbox("計量單位", UNITS)
-                temperature = st.selectbox("商品溫層（必選）", TEMPERATURES)
 
-                add = st.form_submit_button(
-                    "新增並立即開放叫貨",
-                    type="primary"
+        temperature = st.selectbox(
+            "商品溫層（必選）",
+            TEMPERATURES,
+            key="new_product_temperature"
+        )
+
+        categories = PRODUCT_CATEGORIES.get(temperature, [])
+
+        with st.form("add_product_form", clear_on_submit=True):
+            code = st.text_input("商品編號（必填）")
+            name = st.text_input("商品名稱（必填）")
+            barcode = st.text_input("商品條碼（選填）")
+            unit = st.selectbox("計量單位", UNITS)
+
+            if categories:
+                product_category = st.selectbox(
+                    "商品細分類（必選）",
+                    categories
                 )
+            else:
+                product_category = None
+                st.caption("冷藏商品不需要選擇細分類")
+
+            add = st.form_submit_button(
+                "新增並立即開放門市叫貨",
+                type="primary"
+            )
 
             if add:
                 if not code.strip() or not name.strip():
@@ -210,6 +227,7 @@ with tab_branch:
                                     "barcode": barcode.strip() or None,
                                     "unit": unit,
                                     "temperature": temperature,
+                                    "product_category": product_category,
                                     "min_stock": 0,
                                     "is_active": True
                                 }
