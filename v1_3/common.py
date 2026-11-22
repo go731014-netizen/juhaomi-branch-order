@@ -66,7 +66,7 @@ def load_stores(url, key):
 
 def load_products(url, key, active_only=True):
     params = {
-        "select": "id,product_code,product_name,barcode,unit,min_stock,is_active,created_at,temperature",
+        "select": "id,product_code,product_name,barcode,unit,min_stock,is_active,created_at,temperature,product_category",
         "order": "product_name"
     }
     if active_only:
