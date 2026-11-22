@@ -807,7 +807,7 @@ with tab_admin:
                                 st.code(str(e))
 
 
-                else:
+else:
                     st.info("找不到符合關鍵字的商品。")
           
         # --------------------------------
