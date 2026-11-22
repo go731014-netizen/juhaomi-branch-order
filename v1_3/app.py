@@ -18,10 +18,18 @@ st.set_page_config(
 
 st.title("🛒 揪好覓｜雲端叫貨管理")
 st.caption("五間門市共用商品清單・總倉統一管理・分批出貨紀錄")
-st.info(
-    "📌 下單請以 5 的倍數填寫\n\n"
-    "📌 客人調貨／急需商品請備註"
-)
+st.markdown("""
+<div style="
+    background-color: #eaf3ff;
+    padding: 16px 20px;
+    border-radius: 10px;
+    color: #2457a6;
+    line-height: 2;
+">
+    <div>📌 下單請以 5 的倍數填寫</div>
+    <div>📌 客人調貨／急需商品請備註</div>
+</div>
+""", unsafe_allow_html=True)
 # ==================================================
 # 主要分頁
 # ==================================================
