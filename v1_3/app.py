@@ -560,7 +560,19 @@ with tab_admin:
  
             with admin_tab_products:
                 st.subheader("商品清單")
+                            
+                product_search = st.text_input(
+                "🔎 搜尋商品（名稱／編號／條碼）",
+                key="admin_product_search"
+            ).strip().lower()
 
+            if product_search:
+                admin_products = [
+                    p for p in admin_products
+                    if product_search in str(p.get("product_name") or "").lower()
+                    or product_search in str(p.get("product_code") or "").lower()
+                    or product_search in str(p.get("barcode") or "").lower()
+                ]
                 if admin_products:
                     st.dataframe(
                         pd.DataFrame([
@@ -669,5 +681,5 @@ with tab_admin:
                             st.code(str(e))
 
                 else:
-                    st.info("目前沒有商品。")
+                    st.info("找不到符合關鍵字的商品。")
           
