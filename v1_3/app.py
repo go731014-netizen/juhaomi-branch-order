@@ -604,22 +604,98 @@ with tab_admin:
                     or product_search in str(p.get("product_code") or "").lower()
                     or product_search in str(p.get("barcode") or "").lower()
                 ]
+                
                 if admin_products:
-                    st.dataframe(
-                        pd.DataFrame([
-                            {
-                                "商品編號": p.get("product_code"),
-                                "商品名稱": p.get("product_name"),
-                                "條碼": p.get("barcode"),
-                                "單位": p.get("unit"),
-                                "溫層": temperature_of(p),
-                                "啟用中": p.get("is_active")
-                            }
-                            for p in admin_products
-                        ]),
-                        use_container_width=True,
-                        hide_index=True
-                    )
+                    for temp in TEMPERATURES:
+                        temp_products = [
+                            p for p in admin_products
+                            if temperature_of(p) == temp
+                        ]
+
+                        if not temp_products:
+                            continue
+
+                        if temp == "冷藏":
+                            with st.expander(
+                                f"🥬 冷藏商品（{len(temp_products)}項）",
+                                expanded=True
+                            ):
+                                st.dataframe(
+                                    pd.DataFrame([
+                                        {
+                                            "商品編號": p.get("product_code"),
+                                            "商品名稱": p.get("product_name"),
+                                            "條碼": p.get("barcode"),
+                                            "單位": p.get("unit"),
+                                            "啟用中": p.get("is_active")
+                                        }
+                                        for p in temp_products
+                                    ]),
+                                    use_container_width=True,
+                                    hide_index=True
+                                )
+                        else:
+                            emoji = "❄️" if temp == "冷凍" else "📦"
+
+                            with st.expander(
+                                f"{emoji} {temp}商品（{len(temp_products)}項）",
+                                expanded=True
+                            ):
+                                categories = PRODUCT_CATEGORIES.get(temp, [])
+
+                                for category in categories:
+                                    category_products = [
+                                        p for p in temp_products
+                                        if p.get("product_category") == category
+                                    ]
+
+                                    if category_products:
+                                        with st.expander(
+                                            f"{category}（{len(category_products)}項）",
+                                            expanded=False
+                                        ):
+                                            st.dataframe(
+                                                pd.DataFrame([
+                                                    {
+                                                        "商品編號": p.get("product_code"),
+                                                        "商品名稱": p.get("product_name"),
+                                                        "條碼": p.get("barcode"),
+                                                        "單位": p.get("unit"),
+                                                        "啟用中": p.get("is_active")
+                                                    }
+                                                    for p in category_products
+                                                ]),
+                                                use_container_width=True,
+                                                hide_index=True
+                                            )
+
+                                uncategorized = [
+                                    p for p in temp_products
+                                    if p.get("product_category") not in categories
+                                ]
+
+                                if uncategorized:
+                                    with st.expander(
+                                        f"未分類（{len(uncategorized)}項）",
+                                        expanded=True
+                                    ):
+                                        st.dataframe(
+                                            pd.DataFrame([
+                                                {
+                                                    "商品編號": p.get("product_code"),
+                                                    "商品名稱": p.get("product_name"),
+                                                    "條碼": p.get("barcode"),
+                                                    "單位": p.get("unit"),
+                                                    "啟用中": p.get("is_active")
+                                                }
+                                                for p in uncategorized
+                                            ]),
+                                            use_container_width=True,
+                                            hide_index=True
+                                        )
+                else:
+                    st.info("找不到符合關鍵字的商品。")
+
 
                     opts = {
                         f"{p.get('product_code')}｜{p.get('product_name')}｜ID {p['id']}": p
