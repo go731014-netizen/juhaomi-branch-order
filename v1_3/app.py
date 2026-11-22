@@ -634,6 +634,7 @@ with tab_admin:
 
                     item = opts[selected_label]
 
+
                     with st.form(
                         "edit_product_form",
                         clear_on_submit=False
@@ -670,6 +671,23 @@ with tab_admin:
                             key=f"edit_temperature_{item['id']}"
                         )
 
+                        categories = PRODUCT_CATEGORIES.get(temperature, [])
+
+                        if categories:
+                            current_category = item.get("product_category")
+                            product_category = st.selectbox(
+                                "商品細分類",
+                                categories,
+                                index=(
+                                    categories.index(current_category)
+                                    if current_category in categories else 0
+                                ),
+                                key=f"edit_category_{item['id']}"
+                            )
+                        else:
+                            product_category = None
+                            st.caption("冷藏商品不需要選擇細分類")
+
                         min_stock = st.number_input(
                             "最低庫存欄位",
                             min_value=0,
@@ -687,29 +705,31 @@ with tab_admin:
                             "儲存商品修改"
                         )
 
-                    if save:
-                        try:
-                            patch_row(
-                                admin_url,
-                                admin_key,
-                                "products",
-                                {"id": f"eq.{item['id']}"},
-                                {
-                                    "product_name": name.strip(),
-                                    "barcode": barcode.strip() or None,
-                                    "unit": unit,
-                                    "temperature": temperature,
-                                    "min_stock": int(min_stock),
-                                    "is_active": active
-                                }
-                            )
+                        if save:
+                            try:
+                                patch_row(
+                                    admin_url,
+                                    admin_key,
+                                    "products",
+                                    {"id": f"eq.{item['id']}"},
+                                    {
+                                        "product_name": name.strip(),
+                                        "barcode": barcode.strip() or None,
+                                        "unit": unit,
+                                        "temperature": temperature,
+                                        "product_category": product_category,
+                                        "min_stock": int(min_stock),
+                                        "is_active": active
+                                    }
+                                )
 
-                            st.success("商品資料已更新。")
-                            st.rerun()
+                                st.success("商品資料已更新。")
+                                st.rerun()
 
-                        except Exception as e:
-                            st.error("商品修改失敗。")
-                            st.code(str(e))
+                            except Exception as e:
+                                st.error("商品修改失敗。")
+                                st.code(str(e))
+
 
                 else:
                     st.info("找不到符合關鍵字的商品。")
