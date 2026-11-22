@@ -379,9 +379,15 @@ with tab_admin:
             store_map = {
                 s["id"]: s["store_name"] for s in admin_stores
             }
-            product_map = {
+                        product_map = {
                 p["id"]: p["product_name"] for p in admin_products
             }
+
+            product_unit_map = {
+                p["id"]: p.get("unit") or "個"
+                for p in admin_products
+            }
+
             totals = shipped_totals(shipments)
 
                         admin_tab_orders, admin_tab_ship, admin_tab_history, admin_tab_products, admin_tab_print = st.tabs(
