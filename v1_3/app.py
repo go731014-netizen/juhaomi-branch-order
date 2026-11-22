@@ -2,7 +2,7 @@
 import hmac
 import pandas as pd
 import streamlit as st
-
+from datetime import date, datetime, time, timedelta, timezone
 from common import (
     config, get_rows, insert_row, patch_row,
     load_stores, load_products,
@@ -690,3 +690,180 @@ with tab_admin:
                 else:
                     st.info("找不到符合關鍵字的商品。")
           
+        # --------------------------------
+        # 每日出貨列印
+        # --------------------------------
+
+        with admin_tab_print:
+            st.subheader("📦 每日出貨列印")
+
+            taiwan_tz = timezone(timedelta(hours=8))
+
+            print_date = st.date_input(
+                "選擇叫貨日期",
+                value=datetime.now(taiwan_tz).date(),
+                key="daily_print_date"
+            )
+
+            store_names = [
+                s.get("store_name", "")
+                for s in admin_stores
+            ]
+
+            selected_store = st.selectbox(
+                "選擇門市",
+                store_names,
+                key="daily_print_store"
+            )
+
+            selected_store_id = next(
+                (
+                    s["id"]
+                    for s in admin_stores
+                    if s.get("store_name") == selected_store
+                ),
+                None
+            )
+
+            print_orders = []
+
+            for order in orders:
+                created_at = order.get("created_at")
+
+                if not created_at:
+                    continue
+
+                try:
+                    order_time = datetime.fromisoformat(
+                        created_at.replace("Z", "+00:00")
+                    )
+
+                    if order_time.tzinfo is None:
+                        order_time = order_time.replace(
+                            tzinfo=timezone.utc
+                        )
+
+                    order_date = order_time.astimezone(
+                        taiwan_tz
+                    ).date()
+
+                except Exception:
+                    continue
+
+                if (
+                    order_date == print_date
+                    and str(order.get("store_id")) == str(selected_store_id)
+                ):
+                    requested = float(
+                        order.get("requested_quantity") or 0
+                    )
+
+                    shipped = float(
+                        totals.get(order.get("id"), 0)
+                    )
+
+                    if shipped >= requested:
+                        status = "已出貨"
+                    elif shipped > 0:
+                        status = "少出"
+                    else:
+                        status = "未出貨"
+
+                    product_id = order.get("product_id")
+
+                    print_orders.append({
+                        "商品名稱": product_map.get(
+                            product_id, "未知商品"
+                        ),
+                        "單位": product_unit_map.get(
+                            product_id, "個"
+                        ),
+                        "叫貨數量": requested,
+                        "實際出貨": shipped,
+                        "出貨狀態": status
+                    })
+
+            if not print_orders:
+                st.info("這間門市在所選日期沒有叫貨紀錄。")
+
+            else:
+                df_print = pd.DataFrame(print_orders)
+
+                st.write(
+                    f"**{selected_store}｜{print_date} 出貨明細**"
+                )
+
+                st.dataframe(
+                    df_print,
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+                html_table = df_print.to_html(
+                    index=False,
+                    escape=True
+                )
+
+                print_html = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                <meta charset="utf-8">
+                <style>
+                    @page {{
+                        size: A4 portrait;
+                        margin: 15mm;
+                    }}
+                    body {{
+                        font-family: Arial, sans-serif;
+                        color: #222;
+                    }}
+                    h2, p {{
+                        text-align: center;
+                    }}
+                    table {{
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-size: 13px;
+                    }}
+                    th, td {{
+                        border: 1px solid #999;
+                        padding: 9px 6px;
+                        text-align: center;
+                    }}
+                    th {{
+                        background: #eeeeee;
+                    }}
+                    .print-button {{
+                        display: block;
+                        margin: 20px auto;
+                        padding: 10px 25px;
+                        font-size: 16px;
+                        cursor: pointer;
+                    }}
+                    @media print {{
+                        .print-button {{
+                            display: none;
+                        }}
+                    }}
+                </style>
+                </head>
+                <body>
+                    <button class="print-button"
+                        onclick="window.print()">
+                        列印 A4 出貨單
+                    </button>
+                    <h2>揪好覓生鮮超市</h2>
+                    <h2>每日總倉出貨明細</h2>
+                    <p>{selected_store}｜{print_date}</p>
+                    {html_table}
+                </body>
+                </html>
+                """
+
+                st.components.v1.html(
+                    print_html,
+                    height=700,
+                    scrolling=True
+                )
+
