@@ -174,70 +174,70 @@ with tab_branch:
             )
 
 
-        temperature = st.selectbox(
-            "商品溫層（必選）",
-            TEMPERATURES,
-            key="new_product_temperature"
-        )
-
-        categories = PRODUCT_CATEGORIES.get(temperature, [])
-
-        with st.form("add_product_form", clear_on_submit=True):
-            code = st.text_input("商品編號（必填）")
-            name = st.text_input("商品名稱（必填）")
-            barcode = st.text_input("商品條碼（選填）")
-            unit = st.selectbox("計量單位", UNITS)
-
-            if categories:
-                product_category = st.selectbox(
-                    "商品細分類（必選）",
-                    categories
-                )
-            else:
-                product_category = None
-                st.caption("冷藏商品不需要選擇細分類")
-
-            add = st.form_submit_button(
-                "新增並立即開放門市叫貨",
-                type="primary"
+            temperature = st.selectbox(
+                "商品溫層（必選）",
+                TEMPERATURES,
+                key="new_product_temperature"
             )
 
-            if add:
-                if not code.strip() or not name.strip():
-                    st.warning("請填寫商品編號及商品名稱。")
-                else:
-                    try:
-                        exists = get_rows(
-                            url, key, "products",
-                            {
-                                "select": "id",
-                                "product_code": f"eq.{code.strip()}",
-                                "limit": "1"
-                            }
-                        )
+            categories = PRODUCT_CATEGORIES.get(temperature, [])
 
-                        if exists:
-                            st.warning("這個商品編號已存在，請勿重複新增。")
-                        else:
-                            insert_row(
+            with st.form("add_product_form", clear_on_submit=True):
+                code = st.text_input("商品編號（必填）")
+                name = st.text_input("商品名稱（必填）")
+                barcode = st.text_input("商品條碼（選填）")
+                unit = st.selectbox("計量單位", UNITS)
+
+                if categories:
+                    product_category = st.selectbox(
+                        "商品細分類（必選）",
+                        categories
+                    )
+                else:
+                    product_category = None
+                    st.caption("冷藏商品不需要選擇細分類")
+
+                add = st.form_submit_button(
+                    "新增並立即開放門市叫貨",
+                    type="primary"
+                )
+
+                if add:
+                    if not code.strip() or not name.strip():
+                        st.warning("請填寫商品編號及商品名稱。")
+                    else:
+                        try:
+                            exists = get_rows(
                                 url, key, "products",
                                 {
-                                    "product_code": code.strip(),
-                                    "product_name": name.strip(),
-                                    "barcode": barcode.strip() or None,
-                                    "unit": unit,
-                                    "temperature": temperature,
-                                    "product_category": product_category,
-                                    "min_stock": 0,
-                                    "is_active": True
+                                    "select": "id",
+                                    "product_code": f"eq.{code.strip()}",
+                                    "limit": "1"
                                 }
                             )
-                            st.success("商品新增成功，已立即開放五間門市叫貨！")
-                            st.rerun()
 
-                    except Exception as e:
-                        st.error("新增商品失敗，請確認 products 資料表欄位及權限。")
-                        st.code(str(e))
+                            if exists:
+                                st.warning("這個商品編號已存在，請勿重複新增。")
+                            else:
+                                insert_row(
+                                    url, key, "products",
+                                    {
+                                        "product_code": code.strip(),
+                                        "product_name": name.strip(),
+                                        "barcode": barcode.strip() or None,
+                                        "unit": unit,
+                                        "temperature": temperature,
+                                        "product_category": product_category,
+                                        "min_stock": 0,
+                                        "is_active": True
+                                    }
+                                )
+                                st.success("商品新增成功，已立即開放五間門市叫貨！")
+                                st.rerun()
+
+                        except Exception as e:
+                            st.error("新增商品失敗，請確認 products 資料表欄位及權限。")
+                            st.code(str(e))
 
         # ------------------------------
         # 叫貨／出貨紀錄
@@ -389,8 +389,9 @@ with tab_admin:
                 s["id"]: s["store_name"] for s in admin_stores
             }
             product_map = {
-                p["id"]: p["product_name"] for p in admin_products
+                p["id"]: p.get("product_name", "未知商品") for p in admin_products
             }
+            product_detail_map = {p["id"]: p for p in admin_products}
 
             product_unit_map = {
                 p["id"]: p.get("unit") or "個"
@@ -465,24 +466,28 @@ with tab_admin:
                         )
                         pending.append((label, o, remaining))
 
-            ship_keyword = st.text_input(
-                "🔍 搜尋待出貨商品",
-                placeholder="輸入商品名稱或商品編號"
-            )
+                ship_keyword = st.text_input(
+                    "🔍 搜尋待出貨商品",
+                    placeholder="輸入商品名稱或商品編號",
+                    key="shipment_search"
+                ).strip().lower()
 
-            if ship_keyword.strip():
-                k = ship_keyword.strip().lower()
-                pending = [
-                    item for item in pending
-                    if k in str(product_map.get(
-                        item[1].get("product_id"), {}
-                    ).get("product_name", "")).lower()
-                    or k in str(product_map.get(
-                        item[1].get("product_id"), {}
-                    ).get("product_code", "")).lower()
-                ]
+                if ship_keyword:
+                    pending = [
+                        item for item in pending
+                        if ship_keyword in str(
+                            product_detail_map.get(item[1].get("product_id"), {}).get("product_name", "")
+                        ).lower()
+                        or ship_keyword in str(
+                            product_detail_map.get(item[1].get("product_id"), {}).get("product_code", "")
+                        ).lower()
+                        or ship_keyword in str(
+                            product_detail_map.get(item[1].get("product_id"), {}).get("barcode", "")
+                        ).lower()
+                    ]
+
                 if not pending:
-                    st.success("目前沒有待出貨或部分出貨的叫貨項目。")
+                    st.success("目前沒有符合條件的待出貨或部分出貨叫貨項目。")
                 else:
                     labels = [x[0] for x in pending]
                     selected_label = st.selectbox(
@@ -527,9 +532,7 @@ with tab_admin:
 
                     if submit_ship:
                         if qty <= 0 or qty > remaining + 1e-9:
-                            st.error(
-                                f"出貨數量不可超過剩餘數量 {remaining:g}。"
-                            )
+                            st.error(f"出貨數量不可超過剩餘數量 {remaining:g}。")
                         else:
                             try:
                                 insert_row(
@@ -591,27 +594,27 @@ with tab_admin:
  
             with admin_tab_products:
                 st.subheader("商品清單")
-                            
-                product_search = st.text_input(
-                "🔎 搜尋商品（名稱／編號／條碼）",
-                key="admin_product_search"
-            ).strip().lower()
 
-            if product_search:
-                admin_products = [
-                    p for p in admin_products
-                    if product_search in str(p.get("product_name") or "").lower()
-                    or product_search in str(p.get("product_code") or "").lower()
-                    or product_search in str(p.get("barcode") or "").lower()
-                ]
-                
-                if admin_products:
+                product_search = st.text_input(
+                    "🔎 搜尋商品（名稱／編號／條碼）",
+                    key="admin_product_search"
+                ).strip().lower()
+
+                filtered_admin_products = admin_products
+                if product_search:
+                    filtered_admin_products = [
+                        p for p in admin_products
+                        if product_search in str(p.get("product_name") or "").lower()
+                        or product_search in str(p.get("product_code") or "").lower()
+                        or product_search in str(p.get("barcode") or "").lower()
+                    ]
+
+                if filtered_admin_products:
                     for temp in TEMPERATURES:
                         temp_products = [
-                            p for p in admin_products
+                            p for p in filtered_admin_products
                             if temperature_of(p) == temp
                         ]
-
                         if not temp_products:
                             continue
 
@@ -636,19 +639,16 @@ with tab_admin:
                                 )
                         else:
                             emoji = "❄️" if temp == "冷凍" else "📦"
-
                             with st.expander(
                                 f"{emoji} {temp}商品（{len(temp_products)}項）",
                                 expanded=True
                             ):
                                 categories = PRODUCT_CATEGORIES.get(temp, [])
-
                                 for category in categories:
                                     category_products = [
                                         p for p in temp_products
                                         if p.get("product_category") == category
                                     ]
-
                                     if category_products:
                                         with st.expander(
                                             f"{category}（{len(category_products)}項）",
@@ -673,7 +673,6 @@ with tab_admin:
                                     p for p in temp_products
                                     if p.get("product_category") not in categories
                                 ]
-
                                 if uncategorized:
                                     with st.expander(
                                         f"未分類（{len(uncategorized)}項）",
@@ -696,68 +695,52 @@ with tab_admin:
                 else:
                     st.info("找不到符合關鍵字的商品。")
 
+                st.divider()
+                st.subheader("修改商品資料")
 
-                    opts = {
-                        f"{p.get('product_code')}｜{p.get('product_name')}｜ID {p['id']}": p
-                        for p in admin_products
-                    }
+                opts = {
+                    f"{p.get('product_code')}｜{p.get('product_name')}｜ID {p['id']}": p
+                    for p in filtered_admin_products
+                }
 
+                if opts:
                     selected_label = st.selectbox(
                         "選擇商品修改",
                         list(opts.keys()),
                         key="admin_product_select"
                     )
-
                     item = opts[selected_label]
 
-
-                    with st.form(
-                        "edit_product_form",
-                        clear_on_submit=False
-                    ):
+                    with st.form("edit_product_form", clear_on_submit=False):
                         name = st.text_input(
                             "商品名稱",
                             value=item.get("product_name") or "",
                             key=f"edit_name_{item['id']}"
                         )
-
                         barcode = st.text_input(
                             "商品條碼",
                             value=item.get("barcode") or "",
                             key=f"edit_barcode_{item['id']}"
                         )
-
                         unit = st.selectbox(
                             "計量單位",
                             UNITS,
-                            index=(
-                                UNITS.index(item.get("unit"))
-                                if item.get("unit") in UNITS else 0
-                            ),
+                            index=(UNITS.index(item.get("unit")) if item.get("unit") in UNITS else 0),
                             key=f"edit_unit_{item['id']}"
                         )
-
                         temperature = st.selectbox(
                             "商品溫層",
                             TEMPERATURES,
-                            index=(
-                                TEMPERATURES.index(item.get("temperature"))
-                                if item.get("temperature") in TEMPERATURES else 2
-                            ),
+                            index=(TEMPERATURES.index(item.get("temperature")) if item.get("temperature") in TEMPERATURES else 2),
                             key=f"edit_temperature_{item['id']}"
                         )
-
                         categories = PRODUCT_CATEGORIES.get(temperature, [])
-
                         if categories:
                             current_category = item.get("product_category")
                             product_category = st.selectbox(
                                 "商品細分類",
                                 categories,
-                                index=(
-                                    categories.index(current_category)
-                                    if current_category in categories else 0
-                                ),
+                                index=(categories.index(current_category) if current_category in categories else 0),
                                 key=f"edit_category_{item['id']}"
                             )
                         else:
@@ -770,46 +753,38 @@ with tab_admin:
                             value=int(item.get("min_stock") or 0),
                             key=f"edit_min_stock_{item['id']}"
                         )
-
                         active = st.checkbox(
                             "啟用商品（啟用後門市可叫貨）",
                             value=bool(item.get("is_active")),
                             key=f"edit_active_{item['id']}"
                         )
+                        save = st.form_submit_button("儲存商品修改")
 
-                        save = st.form_submit_button(
-                            "儲存商品修改"
-                        )
+                    if save:
+                        try:
+                            patch_row(
+                                admin_url,
+                                admin_key,
+                                "products",
+                                {"id": f"eq.{item['id']}"},
+                                {
+                                    "product_name": name.strip(),
+                                    "barcode": barcode.strip() or None,
+                                    "unit": unit,
+                                    "temperature": temperature,
+                                    "product_category": product_category,
+                                    "min_stock": int(min_stock),
+                                    "is_active": active
+                                }
+                            )
+                            st.success("商品資料已更新。")
+                            st.rerun()
+                        except Exception as e:
+                            st.error("商品修改失敗。")
+                            st.code(str(e))
+                else:
+                    st.info("目前沒有可修改的商品。")
 
-                        if save:
-                            try:
-                                patch_row(
-                                    admin_url,
-                                    admin_key,
-                                    "products",
-                                    {"id": f"eq.{item['id']}"},
-                                    {
-                                        "product_name": name.strip(),
-                                        "barcode": barcode.strip() or None,
-                                        "unit": unit,
-                                        "temperature": temperature,
-                                        "product_category": product_category,
-                                        "min_stock": int(min_stock),
-                                        "is_active": active
-                                    }
-                                )
-
-                                st.success("商品資料已更新。")
-                                st.rerun()
-
-                            except Exception as e:
-                                st.error("商品修改失敗。")
-                                st.code(str(e))
-
-
-else:
-                    st.info("找不到符合關鍵字的商品。")
-          
         # --------------------------------
         # 每日出貨列印
         # --------------------------------
