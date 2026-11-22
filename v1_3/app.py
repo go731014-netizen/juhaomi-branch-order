@@ -64,104 +64,117 @@ with tab_branch:
         # ------------------------------
 
         with tab_order:
-            temp_filter = st.radio(
-                "商品溫層",
-                TEMPERATURES,
-                horizontal=True,
-                key="branch_temp_filter"
-            )
+            # 第一頁只顯示三種商品溫層；點選後才進入商品清單
+            if "branch_selected_temperature" not in st.session_state:
+                st.session_state.branch_selected_temperature = None
 
-            keyword = st.text_input(
-                "搜尋商品",
-                placeholder="輸入商品名稱、商品編號或條碼",
-                key="branch_search"
-            )
+            selected_temperature = st.session_state.branch_selected_temperature
 
-            filtered = products
-
-            if temp_filter != "全部":
-                filtered = [
-                    p for p in filtered
-                    if temperature_of(p) == temp_filter
-                ]
-
-            if keyword:
-                k = keyword.strip().lower()
-                filtered = [
-                    p for p in filtered
-                    if k in str(p.get("product_name", "")).lower()
-                    or k in str(p.get("product_code", "")).lower()
-                    or k in str(p.get("barcode", "")).lower()
-                ]
-
-            if not filtered:
-                st.info("找不到符合條件的啟用商品，可以到「新增商品」登記。")
+            if selected_temperature is None:
+                st.write("請先選擇商品溫層")
+                temp_cols = st.columns(3)
+                for col, temp in zip(temp_cols, TEMPERATURES):
+                    with col:
+                        if st.button(
+                            temp,
+                            key=f"choose_temperature_{temp}",
+                            use_container_width=True,
+                            type="primary"
+                        ):
+                            st.session_state.branch_selected_temperature = temp
+                            st.rerun()
             else:
-                cart = []
+                if st.button("← 返回商品溫層", key="back_to_temperature"):
+                    st.session_state.branch_selected_temperature = None
+                    st.rerun()
 
-                with st.form("order_form"):
-                    st.write(f"**{branch}｜可叫商品**")
+                st.subheader(f"{selected_temperature}｜商品選擇")
+                keyword = st.text_input(
+                    "搜尋商品",
+                    placeholder="輸入商品名稱、商品編號或條碼",
+                    key="branch_search"
+                )
 
-                    for p in filtered:
-                        c1, c2, c3 = st.columns([4, 1.2, 1.5])
+                filtered = [
+                    p for p in products
+                    if temperature_of(p) == selected_temperature
+                ]
 
-                        c1.write(f"**{p['product_name']}**")
-                        c1.caption(
-                            f"{temperature_of(p)}｜編號：{p.get('product_code') or '—'}"
-                        )
-                        c2.write(p.get("unit") or "個")
+                if keyword:
+                    k = keyword.strip().lower()
+                    filtered = [
+                        p for p in filtered
+                        if k in str(p.get("product_name", "")).lower()
+                        or k in str(p.get("product_code", "")).lower()
+                        or k in str(p.get("barcode", "")).lower()
+                    ]
 
-                        qty = c3.number_input(
-                            "叫貨數量",
-                            min_value=0,
-                            step=1,
-                            value=0,
-                            key=f"qty_{p['id']}",
-                            label_visibility="collapsed"
-                        )
+                if not filtered:
+                    st.info("這個溫層目前沒有符合條件的啟用商品。")
+                else:
+                    cart = []
 
-                        if qty > 0:
-                            cart.append({
-                                "product_id": p["id"],
-                                "quantity": int(qty)
-                            })
-                    caller_name = st.text_input("叫貨人姓名（必填）")
-                    note = st.text_input("整張叫貨單備註（選填）")
+                    with st.form("order_form"):
+                        st.write(f"**{branch}｜{selected_temperature}商品清單**")
 
-                    submitted = st.form_submit_button(
-                        "送出叫貨單",
-                        type="primary",
-                        use_container_width=True
-                    )
+                        for p in filtered:
+                            c1, c2, c3 = st.columns([4, 1.2, 1.5])
 
-                if submitted:
-                    if not caller_name.strip():
-                        st.warning("請填寫叫貨人姓名。")
-                    elif not cart:
-                        st.warning("請至少輸入一項商品數量。")
-                    else:
-                        try:
-                            for item in cart:
-                                insert_row(
-                                    url, key, "restock_requests",
-                                    {
-                                        "store_id": store_id,
-                                        "product_id": item["product_id"],
-                                        "current_quantity": 0,
-                                        "requested_quantity": item["quantity"],
-                                        "caller_name": caller_name.strip(),
-                                        "note": note.strip() or None,
-                                        "status": "pending"
-                                    }
-                                )
+                            c1.write(f"**{p['product_name']}**")
+                            c1.caption(f"編號：{p.get('product_code') or '—'}")
+                            c2.write(p.get("unit") or "個")
 
-                            st.success(
-                                f"{branch} 已送出 {len(cart)} 項叫貨申請！"
+                            qty = c3.number_input(
+                                "叫貨數量",
+                                min_value=0,
+                                step=1,
+                                value=0,
+                                key=f"qty_{p['id']}",
+                                label_visibility="collapsed"
                             )
 
-                        except Exception as e:
-                            st.error("送出失敗，請確認資料表欄位及新增權限。")
-                            st.code(str(e))
+                            if qty > 0:
+                                cart.append({
+                                    "product_id": p["id"],
+                                    "quantity": int(qty)
+                                })
+
+                        caller_name = st.text_input("叫貨人姓名（必填）")
+                        note = st.text_input("整張叫貨單備註（選填）")
+                        submitted = st.form_submit_button(
+                            "送出叫貨單",
+                            type="primary",
+                            use_container_width=True
+                        )
+
+                    if submitted:
+                        if not caller_name.strip():
+                            st.warning("請填寫叫貨人姓名。")
+                        elif not cart:
+                            st.warning("請至少輸入一項商品數量。")
+                        else:
+                            try:
+                                for item in cart:
+                                    insert_row(
+                                        url, key, "restock_requests",
+                                        {
+                                            "store_id": store_id,
+                                            "product_id": item["product_id"],
+                                            "current_quantity": 0,
+                                            "requested_quantity": item["quantity"],
+                                            "caller_name": caller_name.strip(),
+                                            "note": note.strip() or None,
+                                            "status": "pending"
+                                        }
+                                    )
+
+                                st.success(
+                                    f"{branch} 已送出 {len(cart)} 項叫貨申請！"
+                                )
+
+                            except Exception as e:
+                                st.error("送出失敗，請確認資料表欄位及新增權限。")
+                                st.code(str(e))
 
         # ------------------------------
         # 新增商品
