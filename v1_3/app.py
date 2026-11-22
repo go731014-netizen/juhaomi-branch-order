@@ -465,6 +465,22 @@ with tab_admin:
                         )
                         pending.append((label, o, remaining))
 
+            ship_keyword = st.text_input(
+                "🔍 搜尋待出貨商品",
+                placeholder="輸入商品名稱或商品編號"
+            )
+
+            if ship_keyword.strip():
+                k = ship_keyword.strip().lower()
+                pending = [
+                    item for item in pending
+                    if k in str(product_map.get(
+                        item[1].get("product_id"), {}
+                    ).get("product_name", "")).lower()
+                    or k in str(product_map.get(
+                        item[1].get("product_id"), {}
+                    ).get("product_code", "")).lower()
+                ]
                 if not pending:
                     st.success("目前沒有待出貨或部分出貨的叫貨項目。")
                 else:
