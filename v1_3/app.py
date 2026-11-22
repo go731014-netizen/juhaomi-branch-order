@@ -7,8 +7,7 @@ from common import (
     config, get_rows, insert_row, patch_row,
     load_stores, load_products,
     shipped_totals, derived_status,
-    UNITS, TEMPERATURES, temperature_of
-)
+    UNITS, TEMPERATURES, PRODUCT_CATEGORIES, temperature_of)
 
 st.set_page_config(
     page_title="揪好覓｜門市叫貨與總倉管理",
