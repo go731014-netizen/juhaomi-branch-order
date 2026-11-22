@@ -379,7 +379,7 @@ with tab_admin:
             store_map = {
                 s["id"]: s["store_name"] for s in admin_stores
             }
-                        product_map = {
+            product_map = {
                 p["id"]: p["product_name"] for p in admin_products
             }
 
@@ -389,8 +389,7 @@ with tab_admin:
             }
 
             totals = shipped_totals(shipments)
-
-                        admin_tab_orders, admin_tab_ship, admin_tab_history, admin_tab_products, admin_tab_print = st.tabs(
+            admin_tab_orders, admin_tab_ship, admin_tab_history, admin_tab_products, admin_tab_print = st.tabs(
                 [
                     "📋 全部叫貨紀錄",
                     "🚚 登記出貨",
